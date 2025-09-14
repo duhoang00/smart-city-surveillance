@@ -27,7 +27,6 @@ export default function CCTVPage() {
   const [frames, setFrames] = useState<Record<string, string>>({});
   const wsRef = useRef<WebSocket | null>(null);
 
-  // fetch available cameras
   useEffect(() => {
     fetch("http://localhost:8000/api/cameras")
       .then((res) => res.json())
@@ -63,7 +62,10 @@ export default function CCTVPage() {
 
   return (
     <div className="p-6 space-y-6">
-      {/* Camera selection */}
+      <div>
+				<h1 className="text-2xl font-bold text-white tracking-wider">CCTV</h1>
+			</div>
+
       <div className="flex flex-wrap items-center gap-3">
         <span className="text-sm text-neutral-400">Select up to 4 cameras:</span>
         <div className="flex flex-wrap gap-2">

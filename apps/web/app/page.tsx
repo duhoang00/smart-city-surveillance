@@ -6,6 +6,7 @@ import { ChevronRight, Monitor, Settings, Shield, Target, Users} from "lucide-re
 import { Button } from "@repo/ui/components/shadcn/button"
 
 import CCTVPage from "./cctv/page"
+import GuardPage from "./guard/page"
 
 type Page = {
   id: "cctv" | "guards" | "operations" | "intelligence" | "systems";
@@ -15,7 +16,7 @@ type Page = {
 
 const pageItem: Page[] = [
   { id: "cctv", icon: Monitor, label: "CCTV" },
-  { id: "guards", icon: Users, label: "ON-DUTY GUARDS" },
+  { id: "guards", icon: Users, label: "GUARDS" },
   { id: "operations", icon: Target, label: "OPERATIONS" },
   { id: "intelligence", icon: Shield, label: "INTELLIGENCE" },
   { id: "systems", icon: Settings, label: "SYSTEMS" },
@@ -89,6 +90,7 @@ export default function Dashboard() {
       <div className={`flex-1 flex flex-col ${!sidebarCollapsed ? "md:ml-0" : ""}`}>
         <div className="flex-1 overflow-auto">
           {activeSection?.id === "cctv" && <CCTVPage />}
+          {activeSection?.id === "guards" && <GuardPage/>}
         </div>
       </div>
     </div>

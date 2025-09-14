@@ -1,0 +1,104 @@
+"use client"
+
+import { useState, useEffect } from "react"
+import { Shield, Cctv } from "lucide-react"
+
+import { Card, CardContent, CardHeader, CardTitle } from "@repo/ui/components/shadcn/card"
+import { Camera, Guard } from "@repo/types"
+
+export default function AgentNetworkPage() {
+	const [guards, setGuards] = useState<Guard[]>([]);
+	const [cameras, setCameras] = useState<Camera[]>([]);
+
+	useEffect(() => {
+		fetch("http://localhost:8000/api/guards")
+			.then((res) => res.json())
+			.then((data) => {
+				setGuards(data);
+			});
+	}, []);
+
+	useEffect(() => {
+		fetch("http://localhost:8000/api/cameras")
+			.then((res) => res.json())
+			.then((data) => {
+				setCameras(data);
+			});
+	}, []);
+
+	const handleSelectGuard = (guard: Guard) => {
+		window.open(`/guard/${guard.id}`, "_blank");
+	}
+
+	return (
+		<div className="p-6 space-y-6">
+			<div>
+				<h1 className="text-2xl font-bold text-white tracking-wider">GUARD NETWORK</h1>
+				=			</div>
+
+			<div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
+				<Card className="bg-neutral-900 border-neutral-700">
+					<CardContent className="p-4">
+						<div className="flex items-center justify-between">
+							<div>
+								<p className="text-xs text-neutral-400 tracking-wider">ACTIVE GUARDS</p>
+								<p className="text-2xl font-bold text-white font-mono">{guards.length ?? 0}</p>
+							</div>
+							<Shield className="w-8 h-8 text-white" />
+						</div>
+					</CardContent>
+				</Card>
+
+				<Card className="bg-neutral-900 border-neutral-700">
+					<CardContent className="p-4">
+						<div className="flex items-center justify-between">
+							<div>
+								<p className="text-xs text-neutral-400 tracking-wider">ACTIVE CAMERAS</p>
+								<p className="text-2xl font-bold text-white font-mono">{cameras.length ?? 0}</p>
+							</div>
+							<Cctv className="w-8 h-8 text-white" />
+						</div>
+					</CardContent>
+				</Card>
+			</div>
+
+			<Card className="bg-neutral-900 border-neutral-700">
+				<CardHeader>
+					<CardTitle className="text-sm font-medium text-neutral-300 tracking-wider">GUARD ROSTER</CardTitle>
+				</CardHeader>
+				<CardContent>
+					<div className="overflow-x-auto">
+						<table className="w-full">
+							<thead>
+								<tr className="border-b border-neutral-700">
+									<th className="text-left py-3 px-4 text-xs font-medium text-neutral-400 tracking-wider">GUARD ID</th>
+									<th className="text-left py-3 px-4 text-xs font-medium text-neutral-400 tracking-wider">GUARD NAME</th>
+									<th className="text-left py-3 px-4 text-xs font-medium text-neutral-400 tracking-wider">CAMERA ID</th>
+								</tr>
+							</thead>
+							<tbody>
+								{guards.map((guard, index) => (
+									<tr
+										key={guard.id}
+										className={`border-b border-neutral-800 hover:bg-neutral-800 transition-colors cursor-pointer ${index % 2 === 0 ? "bg-neutral-900" : "bg-neutral-850"
+											}`}
+										onClick={() => handleSelectGuard(guard)}
+									>
+										<td className="py-3 px-4 text-sm text-white font-mono">{guard.id}</td>
+										<td className="py-3 px-4 text-sm text-white">{guard.name}</td>
+
+										<td className="py-3 px-4">
+											<div className="flex items-center gap-2">
+												<span className="text-sm text-neutral-300">{guard.camera}</span>
+											</div>
+										</td>
+									</tr>
+								))}
+							</tbody>
+						</table>
+					</div>
+				</CardContent>
+			</Card>
+		</div>
+	)
+}
