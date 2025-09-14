@@ -1,7 +1,25 @@
 "use client";
 
 import { use, useEffect, useRef, useState } from "react";
-import { ActivityMessage, UpdateMessage } from "@repo/types";
+import { ActivityMessage, UpdateMessage, CameraFrame } from "@repo/types";
+
+const initCctvWS = (
+  guardId: string,
+  onFrame: (frame: string) => void
+) => {
+  const ws = new WebSocket(`${process.env.NEXT_PUBLIC_WS_URL}/cctv?id=${guardId}`);
+
+  ws.onmessage = (event) => {
+    try {
+      const data: CameraFrame = JSON.parse(event.data);
+      onFrame(`data:image/jpeg;base64,${data.frame}`);
+    } catch {
+      console.warn("Unexpected CCTV message", event.data);
+    }
+  };
+
+  return ws;
+};
 
 const initAlarmWS = (
   guardId: string,
@@ -40,6 +58,7 @@ export default function GuardPage({
 }) {
   const { guardId } = use(params);
   const wsRef = useRef<WebSocket | null>(null);
+  const [frameUrl, setFrameUrl] = useState<string | null>(null);
   const [activities, setActivities] = useState<ActivityMessage[]>([]);
   const [updateText, setUpdateText] = useState("");
   const containerRef = useRef<HTMLDivElement | null>(null);
@@ -48,8 +67,11 @@ export default function GuardPage({
     wsRef.current = initAlarmWS(guardId, (msg: ActivityMessage) => {
       setActivities((prev) => [...prev, msg]);
     });
-
-    return () => wsRef.current?.close();
+    const cctvWS = initCctvWS(guardId, (frame) => setFrameUrl(frame));
+    return () => {
+      wsRef.current?.close();
+      cctvWS.close();
+    };
   }, [guardId]);
 
   useEffect(() => {
@@ -77,6 +99,19 @@ export default function GuardPage({
         Guard {guardId} – Live Alarm Feed
       </h1>
 
+      <div className="mb-4">
+        <h2 className="text-lg font-semibold text-white">Camera</h2>
+        {frameUrl ? (
+          <img
+            src={frameUrl}
+            alt={`Guard ${guardId} Camera`}
+            className="w-full rounded-md border border-neutral-700"
+          />
+        ) : (
+          <div className="text-neutral-400">Waiting for camera feed…</div>
+        )}
+      </div>
+
       <div
         ref={containerRef}
         className="flex-1 overflow-y-auto bg-neutral-900 border border-neutral-700 p-4 rounded-md space-y-2"
@@ -88,11 +123,10 @@ export default function GuardPage({
         {activities.map((activity, idx) => (
           <div
             key={idx}
-            className={`p-2 rounded-md ${
-              activity.type === "alarm"
-                ? "border-l-4 border-red-500 bg-neutral-800"
-                : "border-l-4 border-blue-500 bg-neutral-700"
-            }`}
+            className={`p-2 rounded-md ${activity.type === "alarm"
+              ? "border-l-4 border-red-500 bg-neutral-800"
+              : "border-l-4 border-blue-500 bg-neutral-700"
+              }`}
           >
             <div className="text-sm text-gray-300">
               <strong>Time:</strong>{" "}

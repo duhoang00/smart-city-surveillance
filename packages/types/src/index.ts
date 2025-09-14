@@ -4,6 +4,11 @@ export type Camera = {
   file: string;
 }
 
+export type CameraFrame = {
+  cameraId: string;
+  frame: string;
+};
+
 export type Guard = {
   id: string;
   name: string;

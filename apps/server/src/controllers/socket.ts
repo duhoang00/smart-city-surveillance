@@ -29,6 +29,15 @@ export const initSockets = (server: Server) => {
 
     // ========== CCTV ==========
     if (pathname === "/cctv") {
+      const guardId = query?.id as string;
+      if (guardId) {
+        const guard = mockGuards.find((g) => g.id === guardId);
+        if (guard) {
+          cctvClient.set(ws, [guard.camera]); // auto-subscribe
+          console.log(`🎥 Guard ${guardId} auto-subscribed to ${guard.camera}`);
+        }
+      }
+
       ws.on("message", (msg) => {
         try {
           const data = JSON.parse(msg.toString());
@@ -39,10 +48,10 @@ export const initSockets = (server: Server) => {
           console.error("❌ Invalid CCTV message", err);
         }
       });
-      ws.on("close", () => cctvClient.delete(ws));
 
-      // ========== Guard ==========
+      ws.on("close", () => cctvClient.delete(ws));
     } else if (pathname === "/alarm") {
+      // ========== Guard ==========
       const guardId = query?.id as string;
       if (!guardId) {
         ws.close();
@@ -75,8 +84,8 @@ export const initSockets = (server: Server) => {
         guardClients[guardId] = (guardClients[guardId] || []).filter((c) => c !== ws);
       });
 
-      // ========== Operator ==========
     } else if (pathname === "/operator") {
+      // ========== Operator ==========
       operatorClient = ws;
 
       ws.on("message", (msg) => {

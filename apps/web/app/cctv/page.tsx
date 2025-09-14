@@ -10,12 +10,7 @@ import {
   CardTitle,
 } from "@repo/ui/components/shadcn/card";
 import { Button } from "@repo/ui/components/shadcn/button";
-import { ActivityMessage, Camera } from "@repo/types";
-
-type CameraFrame = {
-  cameraId: string;
-  frame: string;
-};
+import { ActivityMessage, Camera, CameraFrame } from "@repo/types";
 
 export default function CCTVPage() {
   const [cameras, setCameras] = useState<Camera[]>([]);
