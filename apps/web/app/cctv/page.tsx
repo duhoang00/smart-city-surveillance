@@ -10,12 +10,7 @@ import {
   CardTitle,
 } from "@repo/ui/components/shadcn/card";
 import { Button } from "@repo/ui/components/shadcn/button";
-import { ActivityMessage } from "@repo/types"
-
-type Camera = {
-  id: string;
-  name: string;
-};
+import { ActivityMessage, Camera } from "@repo/types";
 
 type CameraFrame = {
   cameraId: string;
@@ -36,11 +31,9 @@ export default function CCTVPage() {
       .then((res) => res.json())
       .then((data) => {
         setCameras(data);
-        // default: pick first 4
         setSelected(data.slice(0, 4).map((c: Camera) => c.id));
       });
   }, []);
-
 
   useEffect(() => {
     if (selected.length === 0) return;
@@ -56,9 +49,7 @@ export default function CCTVPage() {
         [data.cameraId]: `data:image/jpeg;base64,${data.frame}`,
       }));
     };
-    return () => {
-      ws.close();
-    };
+    return () => ws.close();
   }, [selected]);
 
   useEffect(() => {
@@ -66,19 +57,9 @@ export default function CCTVPage() {
     operatorWSRef.current = ws;
 
     ws.onmessage = (event) => {
-      const data = JSON.parse(event.data);
-
+      const data: ActivityMessage = JSON.parse(event.data);
       if (data.type === "alarm" || data.type === "update") {
-        setLogs((prev) => [
-          ...prev,
-          {
-            type: data.type,
-            cameraId: data.cameraId,
-            guardId: data.guardId,
-            message: data.message || data.text || "",
-            timestamp: new Date(data.timestamp || Date.now()).toLocaleString(),
-          },
-        ]);
+        setLogs((prev) => [...prev, data]);
       }
     };
 
@@ -91,6 +72,7 @@ export default function CCTVPage() {
         JSON.stringify({
           type: "alarm",
           cameraId: camId,
+          guardId: "operator", // if needed
           message: `🚨 Alarm triggered for: ${camId}`,
           timestamp: new Date().toISOString(),
         })
@@ -100,9 +82,7 @@ export default function CCTVPage() {
 
   return (
     <div className="p-6 space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-white tracking-wider">CCTV</h1>
-      </div>
+      <h1 className="text-2xl font-bold text-white tracking-wider">CCTV</h1>
 
       {/* Camera selection */}
       <div className="flex flex-wrap items-center gap-3">
@@ -114,15 +94,16 @@ export default function CCTVPage() {
               <Button
                 key={cam.id}
                 variant={isActive ? "default" : "outline"}
-                className={`transition-colors ${isActive
-                  ? "bg-orange-500 text-white hover:bg-orange-600"
-                  : "text-neutral-400 hover:bg-neutral-800 hover:text-white"
-                  }`}
+                className={`transition-colors ${
+                  isActive
+                    ? "bg-orange-500 text-white hover:bg-orange-600"
+                    : "text-neutral-400 hover:bg-neutral-800 hover:text-white"
+                }`}
                 onClick={() => {
                   setSelected((prev) =>
                     prev.includes(cam.id)
                       ? prev.filter((id) => id !== cam.id)
-                      : [...prev, cam.id].slice(-4) // max 4
+                      : [...prev, cam.id].slice(-4)
                   );
                 }}
               >
@@ -134,12 +115,12 @@ export default function CCTVPage() {
       </div>
 
       <div className="grid grid-cols-12 gap-4">
-        {/* 2x2 Grid */}
+        {/* CCTV feeds */}
         <Card className="col-span-8 bg-neutral-900 border-neutral-700">
           <CardContent>
             <div className="grid grid-cols-2 gap-4 p-4">
               {selected.length === 0 ? (
-                <div className="col-span-2 gap-1 flex items-center justify-center h-[350px] text-gray-400 text-lg">
+                <div className="col-span-2 flex items-center justify-center h-[350px] text-gray-400 text-lg gap-1">
                   <Monitor />
                   <span>Select a camera feed to get started</span>
                 </div>
@@ -176,7 +157,7 @@ export default function CCTVPage() {
           </CardContent>
         </Card>
 
-        {/* Activity Log */}
+        {/* Activity log */}
         <Card className="col-span-4 bg-neutral-900 border-neutral-700">
           <CardHeader className="pb-3">
             <CardTitle className="text-sm font-medium text-neutral-300 tracking-wider">
@@ -185,36 +166,42 @@ export default function CCTVPage() {
           </CardHeader>
           <CardContent>
             <div className="space-y-3 max-h-80 overflow-y-auto">
-              {logs.length === 0 ? (
-                <div className="text-neutral-500 text-xs italic">No activity yet...</div>
-              ) : (
-                logs.map((log, index) => (
-                  <div
-                    key={index}
-                    className="text-xs border-l-2 border-orange-500 pl-3 hover:bg-neutral-800 p-2 rounded transition-colors"
-                  >
-                    <div className="text-neutral-500 font-mono">{log.timestamp}</div>
-                    <div className="text-white">
-                      {log.type === "alarm" ? (
-                        <>
-                          <span className="text-orange-500 font-mono">ALARM</span>{" "}
-                          triggered for camera{" "}
-                          <span className="text-white font-mono">{log.cameraId}</span>:{" "}
-                          {log.message}
-                        </>
-                      ) : (
-                        <>
-                          Update from{" "}
-                          <span className="text-orange-500 font-mono">
-                            Guard {log.guardId}
-                          </span>
-                          : {log.text}
-                        </>
-                      )}
-                    </div>
+              {logs.map((log, index) => (
+                <div
+                  key={index}
+                  className={`text-xs border-l-2 pl-3 hover:bg-neutral-800 p-2 rounded transition-colors ${
+                    log.type === "alarm" ? "border-red-500" : "border-blue-500"
+                  }`}
+                >
+                  <div className="text-neutral-500 font-mono">
+                    {new Date(log.timestamp).toLocaleString()}
                   </div>
-                ))
-              )}
+
+                  {log.type === "alarm" ? (
+                    <div className="text-white">
+                      <span className="text-orange-500 font-mono font-bold">
+                        🚨 Alarm
+                      </span>{" "}
+                      Camera:{" "}
+                      <span className="text-blue-500 font-mono">
+                        {log.cameraId}
+                      </span>{" "}
+                      – Guard:{" "}
+                      <span className="text-green-500 font-mono">
+                        {log.guardId}
+                      </span>
+                    </div>
+                  ) : (
+                    <div className="text-blue-300">
+                      <span className="font-bold">📝 Update</span> from{" "}
+                      <span className="text-orange-400 font-mono">
+                        Guard: {log.guardId}:
+                      </span>{" "}
+                      {log.message}
+                    </div>
+                  )}
+                </div>
+              ))}
             </div>
           </CardContent>
         </Card>

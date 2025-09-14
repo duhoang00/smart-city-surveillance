@@ -12,18 +12,17 @@ export type Guard = {
 
 export type BaseMessage = {
   guardId: string;
+  message: string;
   timestamp: string;
 };
 
 export type AlarmMessage = BaseMessage & {
   type: "alarm";
   cameraId: string;
-  message: string;
 };
 
 export type UpdateMessage = BaseMessage & {
   type: "update";
-  text: string;
 };
 
 export type ActivityMessage = AlarmMessage | UpdateMessage;

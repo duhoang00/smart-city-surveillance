@@ -1,10 +1,15 @@
-// socket.ts
 import { Server } from "http";
 import { parse } from "url";
 import { WebSocketServer, WebSocket } from "ws";
 
+import {
+  AlarmMessage,
+  UpdateMessage,
+} from "@repo/types";
+
 import { mockCameras, mockGuards } from "../mocks";
 import { startVideoStream } from "./cctv";
+import { send, broadcast } from "../utils"
 
 export const cctvClient = new Map<WebSocket, string[]>();
 export const guardClients: Record<string, WebSocket[]> = {};
@@ -31,68 +36,66 @@ export const initSockets = (server: Server) => {
             cctvClient.set(ws, data.cameraIds);
           }
         } catch (err) {
-          console.error("Invalid CCTV message", err);
+          console.error("❌ Invalid CCTV message", err);
         }
       });
-      ws.on("close", () => {
-        cctvClient.delete(ws);
-      });
+      ws.on("close", () => cctvClient.delete(ws));
 
       // ========== Guard ==========
     } else if (pathname === "/alarm") {
       const guardId = query?.id as string;
+      if (!guardId) {
+        ws.close();
+        return;
+      }
+
       if (!guardClients[guardId]) guardClients[guardId] = [];
       guardClients[guardId].push(ws);
+
       ws.on("message", (msg) => {
         try {
           const data = JSON.parse(msg.toString());
           if (data.type === "update") {
-            const payload = { ...data, guardId, timestamp: new Date().toISOString() };
-            if (operatorClient && operatorClient.readyState === WebSocket.OPEN) {
-              operatorClient.send(JSON.stringify(payload));
-            }
-            (guardClients[guardId] || []).forEach((client) => {
-              if (client.readyState === WebSocket.OPEN) {
-                client.send(JSON.stringify(payload));
-              }
-            });
+            const payload: UpdateMessage = {
+              type: "update",
+              guardId,
+              message: data.message ?? "",
+              timestamp: new Date().toISOString(),
+            };
+
+            if (operatorClient) send(operatorClient, payload);
+            broadcast(guardClients[guardId] || [], payload);
           }
         } catch (err) {
-          console.error("❌ Invalid alarm message", err);
+          console.error("❌ Invalid guard message", err);
         }
       });
+
       ws.on("close", () => {
-        if (guardClients[guardId]) {
-          guardClients[guardId] = guardClients[guardId].filter((c) => c !== ws);
-        }
+        guardClients[guardId] = (guardClients[guardId] || []).filter((c) => c !== ws);
       });
 
       // ========== Operator ==========
     } else if (pathname === "/operator") {
       operatorClient = ws;
+
       ws.on("message", (msg) => {
         try {
           const data = JSON.parse(msg.toString());
           if (data.type === "alarm" && data.cameraId) {
             const guard = mockGuards.find((g) => g.camera === data.cameraId);
-            if (guard) {
-              const payload = {
-                ...data,
-                type: "alarm",
-                guardId: guard.id,
-                timestamp: new Date().toISOString(),
-              };
-              (guardClients[guard.id] || []).forEach((client) => {
-                if (client.readyState === WebSocket.OPEN) {
-                  client.send(JSON.stringify(payload));
-                }
-              });
-              if (operatorClient && operatorClient.readyState === WebSocket.OPEN) {
-                operatorClient.send(JSON.stringify({ ack: true, ...payload }));
-              }
-            } else {
-              console.warn(`⚠️ No guard assigned to camera ${data.cameraId}`);
-            }
+            if (!guard) return;
+
+            const payload: AlarmMessage = {
+              type: "alarm",
+              guardId: guard.id,
+              cameraId: data.cameraId,
+              message: data.message ?? "",
+              timestamp: new Date().toISOString(),
+            };
+
+            broadcast(guardClients[guard.id] || [], payload);
+            if (operatorClient) send(operatorClient, payload);
           }
         } catch (err) {
           console.error("❌ Invalid operator message", err);

@@ -1,7 +1,6 @@
 "use client";
 
 import { use, useEffect, useRef, useState } from "react";
-
 import { ActivityMessage, UpdateMessage } from "@repo/types";
 
 const initAlarmWS = (
@@ -64,7 +63,7 @@ export default function GuardPage({
       const update: UpdateMessage = {
         type: "update",
         guardId,
-        text: updateText,
+        message: updateText,
         timestamp: new Date().toISOString(),
       };
       wsRef.current.send(JSON.stringify(update));
@@ -111,14 +110,13 @@ export default function GuardPage({
               </>
             ) : (
               <div className="text-blue-300">
-                <strong>Update:</strong> {activity.text}
+                <strong>Update:</strong> {activity.message}
               </div>
             )}
           </div>
         ))}
       </div>
 
-      {/* Guard update form */}
       <div className="mt-4 flex gap-2">
         <input
           type="text"
