@@ -13,5 +13,7 @@ export type Guard = {
 export type AlarmMessage = {
   type: "alarm";
   cameraId: string;
+  guardId: string;
   message: string;
+  timestamp: Date,
 };

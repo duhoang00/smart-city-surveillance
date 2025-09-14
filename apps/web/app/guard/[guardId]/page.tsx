@@ -1,6 +1,6 @@
 "use client";
 
-import { use, useEffect, useRef } from "react";
+import { use, useEffect, useRef, useState } from "react";
 import { AlarmMessage } from "@repo/types";
 
 const initAlarmWS = (
@@ -36,19 +36,58 @@ const initAlarmWS = (
 };
 
 export default function GuardPage({ params }: { params: Promise<{ guardId: string }> }) {
-  const { guardId } = use(params); 
+  const { guardId } = use(params);
   const wsRef = useRef<WebSocket | null>(null);
+  const [alarms, setAlarms] = useState<AlarmMessage[]>([]);
+  const containerRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     wsRef.current = initAlarmWS(guardId, (alarm: AlarmMessage) => {
-      console.log("🚨 Alarm received:", alarm);
-      alert(`ALARM for ${alarm.cameraId}: ${alarm.message}`);
+      setAlarms((prev) => [...prev, alarm]);
     });
 
-    return () => {
-      wsRef.current?.close();
-    };
+    return () => wsRef.current?.close();
   }, [guardId]);
 
-  return <div>Guard {guardId} listening for alarms...</div>;
+  useEffect(() => {
+    if (containerRef.current) {
+      containerRef.current.scrollTop = containerRef.current.scrollHeight;
+    }
+  }, [alarms]);
+
+  return (
+    <div className="p-4 h-screen flex flex-col">
+      <h1 className="text-2xl font-bold mb-2">Guard {guardId} – Live Alarm Feed</h1>
+      <div
+        ref={containerRef}
+        className="flex-1 overflow-y-auto bg-neutral-900 border border-neutral-700 p-4 rounded-md space-y-2"
+      >
+        {alarms.length === 0 && (
+          <div className="text-neutral-400">No alarms yet...</div>
+        )}
+
+        {alarms.map((alarm, idx) => (
+          <div
+            key={idx}
+            className="p-2 border-l-4 border-red-500 bg-neutral-800 rounded-md"
+          >
+            <div className="text-sm text-gray-300">
+              <strong>Time:</strong> {new Date(alarm.timestamp || Date.now()).toLocaleString()}
+            </div>
+            <div className="text-white">
+              <strong>Camera:</strong> {alarm.cameraId}
+            </div>
+            <div className="text-orange-300">
+              <strong>Message:</strong> {alarm.message}
+            </div>
+            {alarm.message && (
+              <div className="text-gray-400 text-sm mt-1">
+                <strong>Message:</strong> {alarm.message}
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
 }
