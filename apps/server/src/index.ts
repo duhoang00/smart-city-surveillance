@@ -10,7 +10,7 @@ const port = process.env.PORT || 8000;
 
 app.use(
   cors({
-    origin: "http://localhost:3000",
+    origin: process.env.WEB_URL || "http://localhost:3000",
     methods: ["GET", "POST"],
     allowedHeaders: ["Content-Type"],
   })
@@ -23,5 +23,5 @@ const server = http.createServer(app);
 initSockets(server);
 
 server.listen(port, () => {
-  console.log(`Server is running at http://localhost:${port}`);
+  console.log(`Server is running at PORT: ${port}`);
 });

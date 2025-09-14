@@ -6,12 +6,12 @@ import { Shield, Cctv } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@repo/ui/components/shadcn/card"
 import { Camera, Guard } from "@repo/types"
 
-export default function AgentNetworkPage() {
+export default function GuardNetworkPage() {
 	const [guards, setGuards] = useState<Guard[]>([]);
 	const [cameras, setCameras] = useState<Camera[]>([]);
 
 	useEffect(() => {
-		fetch("http://localhost:8000/api/guards")
+		fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/guards`)
 			.then((res) => res.json())
 			.then((data) => {
 				setGuards(data);
@@ -19,7 +19,7 @@ export default function AgentNetworkPage() {
 	}, []);
 
 	useEffect(() => {
-		fetch("http://localhost:8000/api/cameras")
+		fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/cameras`)
 			.then((res) => res.json())
 			.then((data) => {
 				setCameras(data);
@@ -34,7 +34,7 @@ export default function AgentNetworkPage() {
 		<div className="p-6 space-y-6">
 			<div>
 				<h1 className="text-2xl font-bold text-white tracking-wider">GUARD NETWORK</h1>
-				=			</div>
+			</div>
 
 			<div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
 				<Card className="bg-neutral-900 border-neutral-700">

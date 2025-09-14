@@ -28,7 +28,7 @@ export default function CCTVPage() {
   const wsRef = useRef<WebSocket | null>(null);
 
   useEffect(() => {
-    fetch("http://localhost:8000/api/cameras")
+    fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/cameras`)
       .then((res) => res.json())
       .then((data) => {
         setCameras(data);
@@ -40,7 +40,7 @@ export default function CCTVPage() {
   useEffect(() => {
     if (selected.length === 0) return;
 
-    const ws = new WebSocket("ws://localhost:8000/cctv");
+    const ws = new WebSocket(`${process.env.NEXT_PUBLIC_WS_URL}/cctv`);
     wsRef.current = ws;
 
     ws.onopen = () => {
@@ -115,7 +115,7 @@ export default function CCTVPage() {
                         variant="ghost"
                         className="text-orange-500 hover:text-red-600"
                         onClick={() => {
-                          fetch("http://localhost:8000/api/alarm", {
+                          fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/alarm`, {
                             method: "POST",
                             headers: { "Content-Type": "application/json" },
                             body: JSON.stringify({

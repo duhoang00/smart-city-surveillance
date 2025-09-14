@@ -10,7 +10,7 @@ const initAlarmWS = (
   console.log("🌍 guardId", guardId);
 
   const ws = new WebSocket(
-    `ws://localhost:8000/alarm?id=${guardId}`
+    `${process.env.NEXT_PUBLIC_WS_URL}/alarm?id=${guardId}`
   );
 
   ws.onopen = () => {
