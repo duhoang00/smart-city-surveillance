@@ -1,14 +1,13 @@
 "use client";
 
 import { use, useEffect, useRef, useState } from "react";
-import { AlarmMessage } from "@repo/types";
+
+import { ActivityMessage, UpdateMessage } from "@repo/types";
 
 const initAlarmWS = (
   guardId: string,
-  onAlarm: (alarm: AlarmMessage) => void
+  onMessage: (msg: ActivityMessage) => void
 ) => {
-  console.log("🌍 guardId", guardId);
-
   const ws = new WebSocket(
     `${process.env.NEXT_PUBLIC_WS_URL}/alarm?id=${guardId}`
   );
@@ -19,12 +18,12 @@ const initAlarmWS = (
 
   ws.onmessage = (event) => {
     try {
-      const data: AlarmMessage = JSON.parse(event.data);
-      if (data.type === "alarm") {
-        onAlarm(data);
+      const data: ActivityMessage = JSON.parse(event.data);
+      if (data.type === "alarm" || data.type === "update") {
+        onMessage(data);
       }
     } catch (err) {
-      console.error("❌ Error parsing alarm message:", err);
+      console.error("❌ Error parsing message:", err);
     }
   };
 
@@ -35,15 +34,20 @@ const initAlarmWS = (
   return ws;
 };
 
-export default function GuardPage({ params }: { params: Promise<{ guardId: string }> }) {
+export default function GuardPage({
+  params,
+}: {
+  params: Promise<{ guardId: string }>;
+}) {
   const { guardId } = use(params);
   const wsRef = useRef<WebSocket | null>(null);
-  const [alarms, setAlarms] = useState<AlarmMessage[]>([]);
+  const [activities, setActivities] = useState<ActivityMessage[]>([]);
+  const [updateText, setUpdateText] = useState("");
   const containerRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
-    wsRef.current = initAlarmWS(guardId, (alarm: AlarmMessage) => {
-      setAlarms((prev) => [...prev, alarm]);
+    wsRef.current = initAlarmWS(guardId, (msg: ActivityMessage) => {
+      setActivities((prev) => [...prev, msg]);
     });
 
     return () => wsRef.current?.close();
@@ -53,40 +57,82 @@ export default function GuardPage({ params }: { params: Promise<{ guardId: strin
     if (containerRef.current) {
       containerRef.current.scrollTop = containerRef.current.scrollHeight;
     }
-  }, [alarms]);
+  }, [activities]);
+
+  const sendUpdate = () => {
+    if (wsRef.current && updateText.trim()) {
+      const update: UpdateMessage = {
+        type: "update",
+        guardId,
+        text: updateText,
+        timestamp: new Date().toISOString(),
+      };
+      wsRef.current.send(JSON.stringify(update));
+      setUpdateText("");
+    }
+  };
 
   return (
     <div className="p-4 h-screen flex flex-col">
-      <h1 className="text-2xl font-bold mb-2">Guard {guardId} – Live Alarm Feed</h1>
+      <h1 className="text-2xl font-bold mb-2">
+        Guard {guardId} – Live Alarm Feed
+      </h1>
+
       <div
         ref={containerRef}
         className="flex-1 overflow-y-auto bg-neutral-900 border border-neutral-700 p-4 rounded-md space-y-2"
       >
-        {alarms.length === 0 && (
+        {activities.length === 0 && (
           <div className="text-neutral-400">No alarms yet...</div>
         )}
 
-        {alarms.map((alarm, idx) => (
+        {activities.map((activity, idx) => (
           <div
             key={idx}
-            className="p-2 border-l-4 border-red-500 bg-neutral-800 rounded-md"
+            className={`p-2 rounded-md ${
+              activity.type === "alarm"
+                ? "border-l-4 border-red-500 bg-neutral-800"
+                : "border-l-4 border-blue-500 bg-neutral-700"
+            }`}
           >
             <div className="text-sm text-gray-300">
-              <strong>Time:</strong> {new Date(alarm.timestamp || Date.now()).toLocaleString()}
+              <strong>Time:</strong>{" "}
+              {new Date(activity.timestamp).toLocaleString()}
             </div>
-            <div className="text-white">
-              <strong>Camera:</strong> {alarm.cameraId}
-            </div>
-            <div className="text-orange-300">
-              <strong>Message:</strong> {alarm.message}
-            </div>
-            {alarm.message && (
-              <div className="text-gray-400 text-sm mt-1">
-                <strong>Message:</strong> {alarm.message}
+
+            {activity.type === "alarm" ? (
+              <>
+                <div className="text-white">
+                  <strong>Camera:</strong> {activity.cameraId}
+                </div>
+                <div className="text-orange-300">
+                  <strong>Message:</strong> {activity.message}
+                </div>
+              </>
+            ) : (
+              <div className="text-blue-300">
+                <strong>Update:</strong> {activity.text}
               </div>
             )}
           </div>
         ))}
+      </div>
+
+      {/* Guard update form */}
+      <div className="mt-4 flex gap-2">
+        <input
+          type="text"
+          value={updateText}
+          onChange={(e) => setUpdateText(e.target.value)}
+          className="flex-1 px-3 py-2 rounded-md border border-neutral-600 bg-neutral-800 text-white"
+          placeholder="Send update to Operation Center..."
+        />
+        <button
+          onClick={sendUpdate}
+          className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md"
+        >
+          Send
+        </button>
       </div>
     </div>
   );

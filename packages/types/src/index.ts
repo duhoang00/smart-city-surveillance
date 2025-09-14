@@ -10,10 +10,20 @@ export type Guard = {
   camera: string;
 }
 
-export type AlarmMessage = {
+export type BaseMessage = {
+  guardId: string;
+  timestamp: string;
+};
+
+export type AlarmMessage = BaseMessage & {
   type: "alarm";
   cameraId: string;
-  guardId: string;
   message: string;
-  timestamp: Date,
 };
+
+export type UpdateMessage = BaseMessage & {
+  type: "update";
+  text: string;
+};
+
+export type ActivityMessage = AlarmMessage | UpdateMessage;
