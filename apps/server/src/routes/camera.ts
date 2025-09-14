@@ -1,10 +1,9 @@
 import { Router } from "express";
-import { mockCameras } from "../mocks";
+
+import { getAllCameras } from "../controllers/camera";
 
 const router = Router();
 
-router.get("/", (_req, res) => {
-  res.json(mockCameras.map(({ id, name }) => ({ id, name })));
-});
+router.get("/", getAllCameras);
 
 export default router;

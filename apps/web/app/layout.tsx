@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+
 import "@repo/ui/styles.css";
 
 import { Geist } from "next/font/google";

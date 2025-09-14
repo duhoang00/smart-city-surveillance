@@ -3,7 +3,7 @@ import cors from "cors";
 import http from "http";
 
 import router from "./routes"
-import { initCCTV } from "./controllers/cctv";
+import { initSockets } from "./controllers/socket";
 
 const app = express();
 const port = process.env.PORT || 8000;
@@ -20,7 +20,7 @@ app.use("/api", router);
 
 const server = http.createServer(app);
 
-initCCTV(server);
+initSockets(server);
 
 server.listen(port, () => {
   console.log(`Server is running at http://localhost:${port}`);

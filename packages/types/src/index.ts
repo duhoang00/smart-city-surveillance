@@ -1,10 +1,17 @@
-export type GuardNotification = {
+export type Camera = {
   id: string;
-  guardId: string;
+  name: string;
+  file: string;
+}
+
+export type Guard = {
+  id: string;
+  name: string;
+  camera: string;
+}
+
+export type AlarmMessage = {
+  type: "alarm";
   cameraId: string;
-  timestamp: string;
-  title: string;
   message: string;
-  severity: "low" | "medium" | "high" | "critical";
-  meta?: any;
 };

@@ -2,9 +2,10 @@
 
 import { useState } from "react"
 import { ChevronRight, Monitor, Settings, Shield, Target, Users} from "lucide-react"
-import { Button } from "@repo/ui/components/shadcn/button"
-import CCTVPage from "./cctv/page"
 
+import { Button } from "@repo/ui/components/shadcn/button"
+
+import CCTVPage from "./cctv/page"
 
 type Page = {
   id: "cctv" | "guards" | "operations" | "intelligence" | "systems";

@@ -1,46 +1,8 @@
-import { WebSocketServer, WebSocket } from "ws";
+import { WebSocket } from "ws";
 import ffmpeg from "fluent-ffmpeg";
 import { PassThrough } from "stream";
-import { Server } from "http";
 
-import { mockCameras } from "../mocks";
-
-const subscriptions = new Map<WebSocket, string[]>();
-
-export const initCCTV = (server: Server) => {
-  const wss = new WebSocketServer({ server, path: "/cctv" });
-
-  wss.on("connection", (ws) => {
-    console.log("WebSocket client connected");
-
-    ws.on("message", (msg) => {
-      try {
-        const data = JSON.parse(msg.toString());
-        if (data.action === "subscribe" && Array.isArray(data.cameraIds)) {
-          subscriptions.set(ws, data.cameraIds);
-          console.log("Subscribed cameras:", data.cameraIds);
-        }
-      } catch (err) {
-        console.error("Invalid message", err);
-      }
-    });
-
-    ws.on("close", () => {
-      subscriptions.delete(ws);
-      console.log("WebSocket client disconnected");
-    });
-  });
-
-  // Start streams for all mock cameras
-  mockCameras.forEach((cam) => {
-    if (cam.file) {
-      startVideoStream(cam.id, cam.file);
-    }
-  });
-};
-
-// --- Helper: stream video frames for each camera ---
-function startVideoStream(camId: string, file: string) {
+export const startVideoStream = (subscriptions:Map<WebSocket, string[]>, camId: string, file: string) => {
   const loop = () => {
     const stream = new PassThrough();
 

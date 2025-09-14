@@ -1,6 +1,8 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import { Monitor, Siren } from "lucide-react"
+
 import {
   Card,
   CardContent,
@@ -8,7 +10,6 @@ import {
   CardTitle,
 } from "@repo/ui/components/shadcn/card";
 import { Button } from "@repo/ui/components/shadcn/button";
-import { Monitor } from "lucide-react"
 
 type Camera = {
   id: string;
@@ -37,7 +38,6 @@ export default function CCTVPage() {
       });
   }, []);
 
-  // connect WebSocket
   useEffect(() => {
     if (selected.length === 0) return;
 
@@ -45,7 +45,6 @@ export default function CCTVPage() {
     wsRef.current = ws;
 
     ws.onopen = () => {
-      // tell backend which cameras we want
       ws.send(JSON.stringify({ action: "subscribe", cameraIds: selected }));
     };
 
@@ -75,8 +74,8 @@ export default function CCTVPage() {
                 key={cam.id}
                 variant={isActive ? "default" : "outline"}
                 className={`transition-colors ${isActive
-                    ? "bg-orange-500 text-white hover:bg-orange-600"
-                    : "text-neutral-400 hover:bg-neutral-800 hover:text-white"
+                  ? "bg-orange-500 text-white hover:bg-orange-600"
+                  : "text-neutral-400 hover:bg-neutral-800 hover:text-white"
                   }`}
                 onClick={() => {
                   setSelected((prev) =>
@@ -108,8 +107,27 @@ export default function CCTVPage() {
               selected.map((camId) => (
                 <Card key={camId} className="bg-black">
                   <CardHeader>
-                    <CardTitle className="text-white">
+                    <CardTitle className="text-white flex items-center justify-between">
                       {cameras.find((c) => c.id === camId)?.name || camId}
+                      <Button
+                        variant="ghost"
+                        className="text-orange-500 hover:text-red-600"
+                        onClick={() => {
+                          fetch("http://localhost:8000/api/alarm", {
+                            method: "POST",
+                            headers: { "Content-Type": "application/json" },
+                            body: JSON.stringify({
+                              cameraId: camId,
+                              message: `Alarm triggered manually by operator for ${camId}`,
+                            }),
+                          })
+                            .then((res) => res.json())
+                            .then((data) => console.log("Alarm sent:", data))
+                            .catch((err) => console.error("Error sending alarm:", err));
+                        }}
+                      >
+                        <Siren />
+                      </Button>
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="flex items-center justify-center h-[350px]">
