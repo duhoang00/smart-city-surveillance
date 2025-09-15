@@ -1,58 +1,56 @@
-# Turborepo Tailwind CSS starter
+# Smart City Surveillance
+### Overview
+This project is a next-generation Smart City Surveillance System that replaces a legacy solution. It provides a modern web dashboard for Operators and a mobile-friendly interface for on-duty Guards, all connected via WebSockets for real-time updates.
 
-This Turborepo starter is maintained by the Turborepo core team.
+The system focuses on enabling Operators to monitor CCTV cameras, manage alarms, and dispatch Security Guards, while Guards receive assignments and send live updates from the field.
 
-## Using this example
+## Tech Stack
+- **Frontend**: Next.js 15, TailwindCSS, ShadCN/UI
+- **Backend**: Node.js, WebSocket
+- **Shared Types**: TypeScript packages
+- **UI Components**: ShadCN/UI
+- **Monorepo Tooling**: Turborepo
 
-Run the following command:
+## Monorepo Structure (Turborepo)
+- **apps/web** – Next.js web app (Operator dashboard & Guard interface)
+- **apps/server** – Node.js + WebSocket server
+- **packages/types** – Shared TypeScript types across apps
+- **packages/ui** – Shared ShadCN UI components
+- **packages/...-config** – Shared configs (Tailwind, TypeScript, ESLint)
 
+## Features (by User Story)
+
+1. Operator Dashboard
+- Select premises and cameras in a 2x2 grid layout
+- View live CCTV feeds over WebSocket
+
+2. Alarm System Integration
+- Receive detailed alerts when abnormalities occur (intrusion, suspicious activity, equipment damage, etc.)
+- Alerts include camera and guard context
+
+3. Incident Dispatching
+- Operators can assign incidents to Guards directly from the dashboard
+- Guards receive real-time notifications on their device
+
+4. Guard Mobile Notifications
+- Guards get notified when assigned to an incident
+- Notifications include incident details and instructions
+
+5. Guard Field Updates
+- Guards can send updates back to the Operation Center
+- Provides Operators with real-time situational awareness
+
+6. Role-based Camera Access
+- Operators → see all cameras
+- Guards → only see their assigned cameras
+
+## Getting Started
+Install dependencies:
 ```sh
-npx create-turbo@latest -e with-tailwind
+npm install
 ```
 
-## What's inside?
-
-This Turborepo includes the following packages/apps:
-
-### Apps and Packages
-
-- `docs`: a [Next.js](https://nextjs.org/) app with [Tailwind CSS](https://tailwindcss.com/)
-- `web`: another [Next.js](https://nextjs.org/) app with [Tailwind CSS](https://tailwindcss.com/)
-- `ui`: a stub React component library with [Tailwind CSS](https://tailwindcss.com/) shared by both `web` and `docs` applications
-- `@repo/eslint-config`: `eslint` configurations (includes `eslint-config-next` and `eslint-config-prettier`)
-- `@repo/typescript-config`: `tsconfig.json`s used throughout the monorepo
-
-Each package/app is 100% [TypeScript](https://www.typescriptlang.org/).
-
-### Building packages/ui
-
-This example is set up to produce compiled styles for `ui` components into the `dist` directory. The component `.tsx` files are consumed by the Next.js apps directly using `transpilePackages` in `next.config.ts`. This was chosen for several reasons:
-
-- Make sharing one `tailwind.config.ts` to apps and packages as easy as possible.
-- Make package compilation simple by only depending on the Next.js Compiler and `tailwindcss`.
-- Ensure Tailwind classes do not overwrite each other. The `ui` package uses a `ui-` prefix for it's classes.
-- Maintain clear package export boundaries.
-
-Another option is to consume `packages/ui` directly from source without building. If using this option, you will need to update the `tailwind.config.ts` in your apps to be aware of your package locations, so it can find all usages of the `tailwindcss` class names for CSS compilation.
-
-For example, in [tailwind.config.ts](packages/tailwind-config/tailwind.config.ts):
-
-```js
-  content: [
-    // app content
-    `src/**/*.{js,ts,jsx,tsx}`,
-    // include packages if not transpiling
-    "../../packages/ui/*.{js,ts,jsx,tsx}",
-  ],
+Run all apps in dev mode:
+```sh
+npm install
 ```
-
-If you choose this strategy, you can remove the `tailwindcss` and `autoprefixer` dependencies from the `ui` package.
-
-### Utilities
-
-This Turborepo has some additional tools already setup for you:
-
-- [Tailwind CSS](https://tailwindcss.com/) for styles
-- [TypeScript](https://www.typescriptlang.org/) for static type checking
-- [ESLint](https://eslint.org/) for code linting
-- [Prettier](https://prettier.io) for code formatting
