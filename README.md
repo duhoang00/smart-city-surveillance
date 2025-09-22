@@ -62,7 +62,13 @@ Install dependencies:
 npm install
 ```
 
-Run all apps in dev mode:
+Run in development mode:
 ```sh
-npm install
+npm run dev
 ```
+
+Open the web dashboard at http://localhost:3000
+
+To test the Guard pages:
+1. Go to the Guards tab in the dashboard.
+2. Click on any Guard to open their individual page.
