@@ -4,6 +4,13 @@ This project is a next-generation Smart City Surveillance System that replaces a
 
 The system focuses on enabling Operators to monitor CCTV cameras, manage alarms, and dispatch Security Guards, while Guards receive assignments and send live updates from the field.
 
+### Demo CCTV
+![CCTV demo video](assets/demo-cctv.gif)
+
+### Demo mapping between guards and cameras
+![Guard-Camera Mapping](assets/guard-cam-mapping.png)
+
+
 ## Tech Stack
 - **Frontend**: Next.js 15, TailwindCSS, ShadCN/UI
 - **Backend**: Node.js, WebSocket
