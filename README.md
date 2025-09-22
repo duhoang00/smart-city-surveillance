@@ -1,4 +1,9 @@
 # Smart City Surveillance
+
+> **Note**  
+> This project is an initial prototype to validate the concept and workflows.  
+> It doesn’t yet reflect the full set of features or optimizations, and there’s room for significant improvements in future iterations.
+
 ### Overview
 This project is a next-generation Smart City Surveillance System that replaces a legacy solution. It provides a modern web dashboard for Operators and a mobile-friendly interface for on-duty Guards, all connected via WebSockets for real-time updates.
 
