@@ -100,12 +100,11 @@ export default function GuardPage({
       </h1>
 
       <div className="mb-4">
-        <h2 className="text-lg font-semibold text-white">Camera</h2>
         {frameUrl ? (
           <img
             src={frameUrl}
             alt={`Guard ${guardId} Camera`}
-            className="w-full rounded-md border border-neutral-700"
+            className="w-full rounded-md border-neutral-700 object-contain md:max-h-[50vh]"
           />
         ) : (
           <div className="text-neutral-400">Waiting for camera feed…</div>
