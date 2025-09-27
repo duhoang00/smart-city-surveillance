@@ -62,6 +62,20 @@ Install dependencies:
 npm install
 ```
 
+Copy environment files:
+
+**On macOS/Linux:**
+```sh
+cp apps/web/.env.example apps/web/.env
+cp apps/server/.env.example apps/server/.env
+```
+
+**On Windows (PowerShell or Command Prompt):**
+```sh
+copy apps\web\.env.example apps\web\.env
+copy apps\server\.env.example apps\server\.env
+```
+
 Run in development mode:
 ```sh
 npm run dev

@@ -14,4 +14,4 @@ export type CameraFrame = {
   frame: string;
 };
 
-export type CameraRef = WithId<Camera>;
+

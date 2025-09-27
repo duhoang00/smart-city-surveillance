@@ -89,7 +89,6 @@ export default function GuardPage({
   }, [activities])
 
   const sendUpdate = () => {
-    console.log("sendUpdate", updateText)
     if (wsRef.current && updateText.trim()) {
       const update: UpdateMessage = {
         type: MessageKind.Update,
