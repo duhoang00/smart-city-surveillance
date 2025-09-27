@@ -1,8 +1,13 @@
 import { WebSocket } from "ws";
 import ffmpeg from "fluent-ffmpeg";
 import { PassThrough } from "stream";
+import { CameraId } from "@repo/types";
 
-export const startVideoStream = (subscriptions:Map<WebSocket, string[]>, camId: string, file: string) => {
+export const startVideoStream = (
+  subscriptions: Map<WebSocket, CameraId[]>,
+  camId: CameraId,
+  file: string
+) => {
   const loop = () => {
     const stream = new PassThrough();
 
@@ -42,4 +47,4 @@ export const startVideoStream = (subscriptions:Map<WebSocket, string[]>, camId: 
   };
 
   loop();
-}
+};

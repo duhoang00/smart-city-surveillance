@@ -4,15 +4,18 @@ import { WebSocketServer, WebSocket } from "ws";
 
 import {
   AlarmMessage,
+  GuardId,
+  MessageKind,
   UpdateMessage,
+  CameraId
 } from "@repo/types";
 
 import { mockCameras, mockGuards } from "../mocks";
 import { startVideoStream } from "./cctv";
 import { send, broadcast } from "../utils"
 
-export const cctvClient = new Map<WebSocket, string[]>();
-export const guardClients: Record<string, WebSocket[]> = {};
+export const cctvClient = new Map<WebSocket, CameraId[]>();
+export const guardClients: Record<GuardId, WebSocket[]> = {};
 let operatorClient: WebSocket | null = null;
 
 export const initSockets = (server: Server) => {
@@ -29,7 +32,7 @@ export const initSockets = (server: Server) => {
 
     // ========== CCTV ==========
     if (pathname === "/cctv") {
-      const guardId = query?.id as string;
+      const guardId = query?.id as GuardId;
       if (guardId) {
         const guard = mockGuards.find((g) => g.id === guardId);
         if (guard) {
@@ -52,7 +55,7 @@ export const initSockets = (server: Server) => {
       ws.on("close", () => cctvClient.delete(ws));
     } else if (pathname === "/alarm") {
       // ========== Guard ==========
-      const guardId = query?.id as string;
+      const guardId = query?.id as GuardId;
       if (!guardId) {
         ws.close();
         return;
@@ -63,10 +66,10 @@ export const initSockets = (server: Server) => {
 
       ws.on("message", (msg) => {
         try {
-          const data = JSON.parse(msg.toString());
+          const data = JSON.parse(msg.toString());          
           if (data.type === "update") {
             const payload: UpdateMessage = {
-              type: "update",
+              type: MessageKind.Update,
               guardId,
               message: data.message ?? "",
               timestamp: new Date().toISOString(),
@@ -96,7 +99,7 @@ export const initSockets = (server: Server) => {
             if (!guard) return;
 
             const payload: AlarmMessage = {
-              type: "alarm",
+              type: MessageKind.Alarm,
               guardId: guard.id,
               cameraId: data.cameraId,
               message: data.message ?? "",

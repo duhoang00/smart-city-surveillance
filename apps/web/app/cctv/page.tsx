@@ -10,12 +10,22 @@ import {
   CardTitle,
 } from "@repo/ui/components/shadcn/card";
 import { Button } from "@repo/ui/components/shadcn/button";
-import { ActivityMessage, Camera, CameraFrame } from "@repo/types";
+
+import {
+  ActivityMessage,
+  AlarmMessage,
+  Camera,
+  CameraFrame,
+  CameraId,
+  isAlarmMessage,
+  isUpdateMessage,
+  MessageKind,
+} from "@repo/types";
 
 export default function CCTVPage() {
   const [cameras, setCameras] = useState<Camera[]>([]);
-  const [selected, setSelected] = useState<string[]>([]);
-  const [frames, setFrames] = useState<Record<string, string>>({});
+  const [selected, setSelected] = useState<CameraId[]>([]);
+  const [frames, setFrames] = useState<Record<CameraId, string>>({});
   const [logs, setLogs] = useState<ActivityMessage[]>([]);
 
   const cctvWSRef = useRef<WebSocket | null>(null);
@@ -24,9 +34,9 @@ export default function CCTVPage() {
   useEffect(() => {
     fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/cameras`)
       .then((res) => res.json())
-      .then((data) => {
+      .then((data: Camera[]) => {
         setCameras(data);
-        setSelected(data.slice(0, 4).map((c: Camera) => c.id));
+        setSelected(data.slice(0, 4).map((c) => c.id));
       });
   }, []);
 
@@ -53,7 +63,8 @@ export default function CCTVPage() {
 
     ws.onmessage = (event) => {
       const data: ActivityMessage = JSON.parse(event.data);
-      if (data.type === "alarm" || data.type === "update") {
+
+      if (isAlarmMessage(data) || isUpdateMessage(data)) {
         setLogs((prev) => [...prev, data]);
       }
     };
@@ -61,18 +72,16 @@ export default function CCTVPage() {
     return () => ws.close();
   }, []);
 
-  const sendAlarm = (camId: string) => {
-    if (operatorWSRef.current) {
-      operatorWSRef.current.send(
-        JSON.stringify({
-          type: "alarm",
-          cameraId: camId,
-          guardId: "operator", // if needed
-          message: `🚨 Alarm triggered for: ${camId}`,
-          timestamp: new Date().toISOString(),
-        })
-      );
-    }
+  const sendAlarm = (camId: CameraId) => {
+    operatorWSRef.current?.send(
+      JSON.stringify({
+        type: MessageKind.Alarm,
+        cameraId: camId,
+        guardId: "operator" as any, // FIXME: use GuardId once operator is modeled
+        message: `🚨 Alarm triggered for: ${camId}`,
+        timestamp: new Date().toISOString(),
+      } satisfies AlarmMessage)
+    );
   };
 
   return (
@@ -165,14 +174,16 @@ export default function CCTVPage() {
                 <div
                   key={index}
                   className={`text-xs border-l-2 pl-3 hover:bg-neutral-800 p-2 rounded transition-colors ${
-                    log.type === "alarm" ? "border-red-500" : "border-blue-500"
+                    isAlarmMessage(log)
+                      ? "border-red-500"
+                      : "border-blue-500"
                   }`}
                 >
                   <div className="text-neutral-500 font-mono">
                     {new Date(log.timestamp).toLocaleString()}
                   </div>
 
-                  {log.type === "alarm" ? (
+                  {isAlarmMessage(log) ? (
                     <div className="text-white">
                       <span className="text-orange-500 font-mono font-bold">
                         🚨 Alarm
